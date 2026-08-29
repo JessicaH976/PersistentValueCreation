@@ -33,7 +33,7 @@ The project combines:
 - Quantitative metric construction
 - Practical implementation in **R**
 
-The full methodology, mathematical development, coding, results, and interpretation are presented in the accompanying **Quarto document**.
+The full methodology, mathematical development, coding, results, and interpretation are presented in the accompanying **Quarto documents**.
 
 ## Repository Structure
 
