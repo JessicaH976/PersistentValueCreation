@@ -1,0 +1,181 @@
+---
+title: "Practical Demonstration"
+author: "Quantitative Research Project"
+format: pdf
+editor: visual
+---
+
+First, a function was developed in R.
+
+```{r}
+# Importing packages
+library(readxl)
+
+# Create folder for saved figures
+if (!dir.exists("figures")) {
+  dir.create("figures")
+}
+
+# Creating function
+analyse_roe <- function(file, company_name) {
+  
+  # Import ROE data
+  roe <- read_excel(file)
+  
+  # Save ROE time-series plot
+  png(
+    filename = paste0(
+      "figures/",
+      gsub(" ", "_", company_name),
+      "_ROE.png"
+    ),
+    width = 1600,
+    height = 1000,
+    res = 200
+  )
+  
+  plot(
+    roe$Year,
+    roe$ROE,
+    type = "l",
+    xlab = "Year",
+    ylab = "ROE",
+    main = paste(company_name, "ROE Time-Series")
+  )
+  
+  dev.off()
+  
+  # Persistence measures
+  # Fit AR(1) model (Take note of how R parameterizes the AR(1) model)
+  ar1 <- arima(roe$ROE, order = c(1, 0, 0))
+  
+  phi <- ar1$coef["ar1"]
+  
+  mu <- ar1$coef["intercept"]
+  
+  average <- mean(roe$ROE)
+  
+  half.life <- (log(0.5)/log(abs(phi)))
+  
+  # Resilience measures
+  # 1) ROE volatility
+  
+  roe.volatility <- sd(roe$ROE)
+  
+  
+  # 2) Shock severity
+  
+  shock.threshold <- 1
+  
+  shock.level <- (mu - shock.threshold*roe.volatility)
+  
+  roe$Below.Shock <- (roe$ROE < shock.level)
+  
+  roe$Shock.Episode <- cumsum(roe$Below.Shock & !c(FALSE,roe$Below.Shock[-nrow(roe)]))
+  
+  roe$Shock.Episode[!roe$Below.Shock] <- NA
+  
+  shock.results <- aggregate(
+    ROE ~ Shock.Episode,
+    data = roe,
+    FUN = min,
+    na.action = na.omit
+  )
+  
+  names(shock.results)[2] <- "Trough.ROE"
+  
+  shock.results$Severity <- (mu - shock.results$Trough.ROE)
+  
+  average.max.decline <- mean(shock.results$Severity,na.rm = TRUE)
+  
+  # 3) Recovery period or Shock duration
+  
+  recovery.results <- as.data.frame(table(roe$Shock.Episode[!is.na(roe$Shock.Episode)]))
+  
+  names(recovery.results) <- c("Shock.Episode","Recovery.Period")
+  
+  average.shock.duration <- mean(recovery.results$Recovery.Period)
+  
+  recovery.speed <- (1/average.shock.duration)
+  
+  # Return results
+  return(
+    data.frame(
+      Company = company_name,
+      Mean.ROE = average,
+      Long.Run.ROE = mu,
+      AR1.Phi = phi,
+      Half.Life = half.life,
+      ROE.Volatility = roe.volatility,
+      Shock.Threshold = shock.threshold,
+      Shock.Level = shock.level,
+      Average.Shock.Severity = average.max.decline,
+      Average.Shock.Duration = average.shock.duration,
+      Recovery.Speed = recovery.speed
+    )
+  )
+}
+```
+
+The function is then applied separately to each company's ROE data.
+
+```{r}
+control <- analyse_roe("ROE.xlsx", "Control_Company")
+capitec <- analyse_roe("Capitec_ROE.xlsx","Capitec")
+firstrand <- analyse_roe("FirstRand_ROE.xlsx","FirstRand")
+shoprite <- analyse_roe("Shoprite_ROE.xlsx","Shoprite")
+```
+
+The results from the individual companies are then combined into a single data set for comparison.
+
+```{r}
+all.companies <- rbind(
+  control,
+  capitec,
+  firstrand,
+  shoprite
+)
+
+persistence.resilience.results <- t(all.companies[, -1])
+colnames(persistence.resilience.results) <- all.companies$Company
+persistence.resilience.results <- as.data.frame(persistence.resilience.results)
+print(persistence.resilience.results)
+```
+
+The following historical ROE series provide a visual representation of differences in profitability, variability, and in the occurrence of negative shocks across the companies in the sample.
+
+```{r}
+#| label: fig-capitec-roe
+#| fig-cap: "Historical ROE for Capitec."
+#| echo: false
+
+knitr::include_graphics("figures/Capitec_ROE.png")
+```
+
+```{r}
+#| label: fig-firstrand-roe
+#| fig-cap: "Historical ROE for FirstRand."
+#| echo: false
+
+knitr::include_graphics("figures/FirstRand_ROE.png")
+```
+
+```{r}
+#| label: fig-shoprite-roe
+#| fig-cap: "Historical ROE for Shoprite."
+#| echo: false
+
+knitr::include_graphics("figures/Shoprite_ROE.png")
+```
+
+```{r}
+#| label: fig-control-roe
+#| fig-cap: "Historical ROE for the control company."
+#| echo: false
+
+knitr::include_graphics("figures/Control_Company_ROE.png")
+```
+
+The above graphs highlight the differences in the level and variability in ROE, as well as periods of substantial declines in profitability. However, visual inspection alone does not provide a consistent basis for comparing these characteristics. The time-series are therefore summarized using a set of quantitative measures capturing profitability, persistence and resilience.
+
+(Refer back to the *ROE_analysis* document for an interpretation of the above results.)
