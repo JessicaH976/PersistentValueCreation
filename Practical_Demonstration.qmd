@@ -120,7 +120,7 @@ analyse_roe <- function(file, company_name) {
 The function is then applied separately to each company's ROE data.
 
 ```{r}
-control <- analyse_roe("ControlCompany_ROE.xlsx", "Control_Company")
+control <- analyse_roe("ROE.xlsx", "Control_Company")
 capitec <- analyse_roe("Capitec_ROE.xlsx","Capitec")
 firstrand <- analyse_roe("FirstRand_ROE.xlsx","FirstRand")
 shoprite <- analyse_roe("Shoprite_ROE.xlsx","Shoprite")
