@@ -42,11 +42,13 @@ PersistentValueCreation/
 │
 ├── Data/
 │   ├── Capitec_ROE.xlsx
-│   ├── ControlCompany_ROE.xlsx
 │   ├── FirstRand_ROE.xlsx
+│   ├── ROE.xlsx
 │   └── Shoprite_ROE.xlsx
 │
-├── ROE_analysis.qmd
-├── README.md
 ├── .gitignore
-└── LICENSE
+├── LICENSE
+├── Practical_Demonstration.qmd
+├── README.md
+└── ROE_analysis.qmd
+```
