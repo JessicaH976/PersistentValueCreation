@@ -142,7 +142,7 @@ persistence.resilience.results <- as.data.frame(persistence.resilience.results)
 print(persistence.resilience.results)
 ```
 
-The following historical ROE series provide a visual representation of differences in profitability, variability, and in the occurrence of negative shocks across the companies in the sample.
+The following historical ROE series provide a visual representation of differences in profitability, variability, and the occurrence of negative shocks across the companies in the sample.
 
 ```{r}
 #| label: fig-capitec-roe
